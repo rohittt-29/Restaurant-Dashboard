@@ -7,6 +7,19 @@ export default defineConfig({
 
   server: {
     /**
+     * WHY historyApiFallback:
+     * React Router manages navigation entirely in the browser (client-side routing).
+     * When you type /analytics in the URL bar and hit refresh, the browser asks
+     * the dev server for a file at that exact path. Since /analytics is not a real
+     * file on disk, the server would normally return 404.
+     *
+     * historyApiFallback tells Vite's dev server: "For any 404 on a HTML request,
+     * serve index.html instead." React Router then reads the URL and renders the
+     * correct page — so refresh always works.
+     */
+    historyApiFallback: true,
+
+    /**
      * WHY A PROXY:
      * The browser blocks cross-origin requests (CORS) when the frontend at
      * localhost:5174 tries to directly call the backend at localhost:3000.
@@ -19,20 +32,11 @@ export default defineConfig({
      * This means axios calls use relative URLs like '/orders' instead of
      * 'http://localhost:3000/orders', and the browser never sees a cross-origin request.
      */
-    proxy: {
-      // Proxy all REST API routes to the backend
-      '/orders': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-      },
-      '/menu': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-      },
-      '/analytics': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-      },
+   proxy: {
+  '/api': {
+    target: 'http://localhost:3000',
+    changeOrigin: true,
+  },
       // Proxy Socket.IO WebSocket connection to the backend
       // ws: true enables WebSocket proxying (not just HTTP)
       '/socket.io': {

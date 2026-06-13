@@ -115,13 +115,14 @@ const Analytics = () => {
     );
   }
 
-  // Destructure expected fields from the analytics response
-  // Provide safe defaults in case the backend omits any field
+  // Destructure expected fields from the analytics response.
+  // Field names must EXACTLY match what the backend sends.
+  // API returns: { ordersToday, revenueToday, mostOrdered, avgOrderValue, dailyOrders }
   const {
-    todayOrderCount = 0,
-    todayRevenue = 0,
-    mostOrderedItem = 'N/A',
-    averageOrderValue = 0,
+    ordersToday = 0,
+    revenueToday = 0,
+    mostOrdered = 'N/A',
+    avgOrderValue = 0,
     dailyOrders = [], // Array of { date: 'Mon', count: 12 } for the bar chart
   } = analyticsData;
 
@@ -139,25 +140,25 @@ const Analytics = () => {
         <StatCard
           icon="🛒"
           label="Orders Today"
-          value={todayOrderCount}
+          value={ordersToday}
           sub="total orders placed"
         />
         <StatCard
           icon="💰"
           label="Revenue Today"
-          value={`₹${Number(todayRevenue).toFixed(2)}`}
+          value={`₹${Number(revenueToday).toFixed(2)}`}
           sub="total earnings"
         />
         <StatCard
           icon="🏆"
           label="Most Ordered"
-          value={mostOrderedItem}
+          value={mostOrdered}
           sub="most popular item"
         />
         <StatCard
           icon="📈"
           label="Avg Order Value"
-          value={`₹${Number(averageOrderValue).toFixed(2)}`}
+          value={`₹${Number(avgOrderValue).toFixed(2)}`}
           sub="per order"
         />
       </div>

@@ -35,7 +35,7 @@ const apiClient = axios.create({
  * Used by LiveOrders page on first load and OrderHistory page
  */
 export const fetchOrders = async () => {
-  const response = await apiClient.get('/orders');
+  const response = await apiClient.get('/api/orders');
   return response.data;
 };
 
@@ -47,7 +47,7 @@ export const fetchOrders = async () => {
  * Called when restaurant owner clicks "Mark as Preparing" or "Mark as Done"
  */
 export const updateOrderStatus = async (orderId, status) => {
-  const response = await apiClient.patch(`/orders/${orderId}/status`, { status });
+  const response = await apiClient.patch(`/api/orders/${orderId}/status`, { status });
   return response.data;
 };
 
@@ -58,7 +58,7 @@ export const updateOrderStatus = async (orderId, status) => {
  * Used by MenuManagement page
  */
 export const fetchMenu = async () => {
-  const response = await apiClient.get('/menu');
+  const response = await apiClient.get('/api/menu');
   return response.data;
 };
 
@@ -67,7 +67,7 @@ export const fetchMenu = async () => {
  * @param {Object} itemData - { name: string, price: number }
  */
 export const addMenuItem = async (itemData) => {
-  const response = await apiClient.post('/menu', itemData);
+  const response = await apiClient.post('/api/menu', itemData);
   return response.data;
 };
 
@@ -77,7 +77,7 @@ export const addMenuItem = async (itemData) => {
  * @param {Object} updates - Fields to update (e.g., { available: false })
  */
 export const updateMenuItem = async (itemId, updates) => {
-  const response = await apiClient.patch(`/menu/${itemId}`, updates);
+  const response = await apiClient.patch(`/api/menu/${itemId}`, updates);
   return response.data;
 };
 
@@ -86,7 +86,7 @@ export const updateMenuItem = async (itemId, updates) => {
  * @param {string} itemId - The ID of the menu item to delete
  */
 export const deleteMenuItem = async (itemId) => {
-  const response = await apiClient.delete(`/menu/${itemId}`);
+  const response = await apiClient.delete(`/api/menu/${itemId}`);
   return response.data;
 };
 
@@ -97,7 +97,7 @@ export const deleteMenuItem = async (itemId) => {
  * Used by Analytics page
  */
 export const fetchAnalytics = async () => {
-  const response = await apiClient.get('/analytics');
+  const response = await apiClient.get('/api/analytics');
   return response.data;
 };
 
