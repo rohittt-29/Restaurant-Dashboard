@@ -12,6 +12,7 @@
  */
 
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 // Navigation items array — adding a new page only requires adding an entry here
 const navItems = [
@@ -22,6 +23,8 @@ const navItems = [
 ];
 
 const Sidebar = () => {
+  const { logout } = useAuth();
+
   return (
     // aria-label makes this accessible to screen readers as the main navigation landmark
     <nav className="sidebar" aria-label="Main navigation">
@@ -57,9 +60,17 @@ const Sidebar = () => {
         ))}
       </ul>
 
-      {/* Footer area with version info */}
+      {/* Footer area — version info + logout button */}
       <div className="sidebar__footer">
         <p className="sidebar__footer-text">WhatsApp AI System</p>
+        <button
+          onClick={logout}
+          className="btn btn--ghost sidebar__logout"
+          id="sidebar-logout-btn"
+          aria-label="Log out of dashboard"
+        >
+          <span aria-hidden="true">🚪</span> Logout
+        </button>
       </div>
     </nav>
   );

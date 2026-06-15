@@ -11,6 +11,7 @@
  */
 
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 // Same nav items as Sidebar — kept DRY by importing from a shared constants file
 // (For simplicity, defined inline here since Sidebar is the canonical nav definition)
@@ -22,6 +23,8 @@ const navItems = [
 ];
 
 const BottomNav = () => {
+  const { logout } = useAuth();
+
   return (
     // role="navigation" with aria-label identifies this as a navigation region
     <nav className="bottom-nav" role="navigation" aria-label="Mobile navigation">
@@ -39,6 +42,17 @@ const BottomNav = () => {
           <span className="bottom-nav__label">{item.label}</span>
         </NavLink>
       ))}
+
+      {/* Logout button — styled identically to a nav item for visual consistency */}
+      <button
+        onClick={logout}
+        className="bottom-nav__item bottom-nav__item--logout"
+        id="bottom-nav-logout-btn"
+        aria-label="Log out of dashboard"
+      >
+        <span className="bottom-nav__icon" aria-hidden="true">🚪</span>
+        <span className="bottom-nav__label">Logout</span>
+      </button>
     </nav>
   );
 };

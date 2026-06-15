@@ -1183,3 +1183,209 @@ h1, h2, h3, h4 {
     grid-template-columns: 1fr;
   }
 }
+
+/* ─── 9. AUTH / LOGIN PAGE ───────────────────────────────────────────────── */
+
+/* Full-screen centered wrapper — same bg as the app */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-bg);
+  padding: var(--space-6);
+}
+
+/* White card — matches order cards and sidebar surface */
+.login-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 400px;
+  overflow: hidden;
+}
+
+/* Shake animation — fires when wrong password is entered */
+.login-card--shake {
+  animation: loginShake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes loginShake {
+  10%, 90%  { transform: translateX(-3px); }
+  20%, 80%  { transform: translateX(4px);  }
+  30%, 50%, 70% { transform: translateX(-5px); }
+  40%, 60%  { transform: translateX(5px);  }
+  100%      { transform: translateX(0);    }
+}
+
+/* Brand header — mirrors the Sidebar brand block */
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-6);
+  background: linear-gradient(135deg, var(--color-primary-light), #f0fdf9);
+}
+
+.login-brand__icon {
+  font-size: 28px;
+}
+
+.login-brand__name {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.login-brand__subtitle {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.login-divider {
+  height: 1px;
+  background-color: var(--color-border);
+}
+
+.login-body {
+  padding: var(--space-6);
+}
+
+.login-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-1);
+}
+
+.login-desc {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-6);
+}
+
+/* Form field group */
+.login-field {
+  margin-bottom: var(--space-5);
+}
+
+.login-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-2);
+}
+
+/* Input wrapper — icon on left, toggle on right */
+.login-input-wrap {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  background-color: var(--color-surface);
+}
+
+.login-input-wrap:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(29, 158, 117, 0.12);
+}
+
+/* When the input has an error, border turns red */
+.login-input-wrap:has(.login-input--error) {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.10);
+}
+
+.login-input-icon {
+  padding: 0 var(--space-3);
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.login-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 11px var(--space-2);
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--color-text-primary);
+  background: transparent;
+  /* Prevent autofill from changing bg color */
+  -webkit-text-fill-color: var(--color-text-primary);
+}
+
+.login-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* Show / Hide toggle */
+.login-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 var(--space-3);
+  font-size: 16px;
+  line-height: 1;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+  transition: opacity var(--transition-fast);
+}
+.login-toggle:hover { opacity: 0.7; }
+
+/* Inline error text below the input */
+.login-error {
+  font-size: 13px;
+  color: var(--color-danger);
+  margin-top: var(--space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  animation: fadeIn 0.2s ease;
+}
+
+/* Full-width submit button */
+.login-submit {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+  border-radius: var(--radius-md);
+  justify-content: center;
+}
+
+/* Footer note below the card body */
+.login-footer-note {
+  text-align: center;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  padding: var(--space-3) var(--space-6) var(--space-5);
+  border-top: 1px solid var(--color-border);
+  background-color: var(--color-bg);
+}
+
+/* ─── LOGOUT BUTTON in Sidebar footer ── */
+.sidebar__logout {
+  width: 100%;
+  margin-top: var(--space-3);
+  font-size: 13px;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+/* ─── LOGOUT TAB in BottomNav ── */
+.bottom-nav__item--logout {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  /* Inherits all bottom-nav__item layout styles */
+}
+
+.bottom-nav__item--logout:hover {
+  color: var(--color-danger);
+}
