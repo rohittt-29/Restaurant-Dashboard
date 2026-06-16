@@ -1,16 +1,43 @@
 /**
  * LoginPage.jsx — Password gate before the dashboard loads
  *
- * DESIGN DECISIONS:
- * - White card on the same --color-bg background used everywhere
- * - Green accent #1D9E75 matches the rest of the dashboard exactly
- * - Single password field only — no username complexity
- * - Error message appears inline below the input, not as a modal/toast
- * - "Show / Hide" password toggle for usability on mobile
+ * Redesigned: full-screen split layout
+ * Left: dark panel (#0F172A) with product name & tagline
+ * Right: white panel with clean minimal login form
+ * No emojis — SVG icons only
  */
 
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+
+// SVG Icons
+const LockIcon = () => (
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="7" width="10" height="8" rx="1.5" />
+    <path d="M5 7V5a3 3 0 016 0v2" />
+  </svg>
+);
+
+const EyeIcon = () => (
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z" />
+    <circle cx="8" cy="8" r="2" />
+  </svg>
+);
+
+const EyeOffIcon = () => (
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M2 2l12 12M6.7 6.7A2 2 0 0010 9.3M1 8s2.5-5 7-5c1.3 0 2.5.3 3.5.9M15 8s-2 3.8-7 5c-1 .2-2 .2-3-.1" />
+  </svg>
+);
+
+const AlertIcon = () => (
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="8" cy="8" r="6.5" />
+    <line x1="8" y1="5" x2="8" y2="8.5" />
+    <circle cx="8" cy="11" r="0.5" fill="currentColor" />
+  </svg>
+);
 
 const LoginPage = () => {
   const { login } = useAuth();
@@ -25,7 +52,6 @@ const LoginPage = () => {
     const ok = login(password);
     if (!ok) {
       setError('Wrong password, try again');
-      // Shake animation to give tactile feedback on failure
       setShaking(true);
       setTimeout(() => setShaking(false), 500);
       setPassword('');
@@ -34,38 +60,58 @@ const LoginPage = () => {
 
   return (
     <div className="login-page">
-      <div className={`login-card ${shaking ? 'login-card--shake' : ''}`}>
-
-        {/* Brand header — same branding as the Sidebar */}
-        <div className="login-brand">
-          <span className="login-brand__icon">🍴</span>
-          <div>
-            <h1 className="login-brand__name">RestaurantOS</h1>
-            <p className="login-brand__subtitle">Order Dashboard</p>
-          </div>
+      {/* Left dark panel */}
+      <div className="login-left">
+        <div className="login-brand-logo">
+          OrderOS
+          <span className="login-brand-dot" />
         </div>
 
-        <div className="login-divider" />
+        <h1 className="login-left-headline">
+          Smarter ordering<br />for your restaurant
+        </h1>
+        <p className="login-left-tagline">
+          AI-powered ordering for restaurants — manage live orders, track your menu, and analyze performance in one place.
+        </p>
 
-        <div className="login-body">
-          <h2 className="login-title">Welcome back</h2>
-          <p className="login-desc">Enter your password to access the dashboard</p>
+        <div className="login-left-features">
+          <div className="login-feature-item">
+            <span className="login-feature-dot" />
+            Real-time WhatsApp order processing
+          </div>
+          <div className="login-feature-item">
+            <span className="login-feature-dot" />
+            Live kitchen status updates
+          </div>
+          <div className="login-feature-item">
+            <span className="login-feature-dot" />
+            Revenue analytics & insights
+          </div>
+        </div>
+      </div>
+
+      {/* Right white form panel */}
+      <div className="login-right">
+        <div className={`login-form-wrap ${shaking ? 'login-form-wrap--shake' : ''}`}>
+          <h2 className="login-form-title">Welcome back</h2>
+          <p className="login-form-subtitle">Enter your password to continue</p>
 
           <form onSubmit={handleSubmit} noValidate>
-            {/* Password field with show/hide toggle */}
             <div className="login-field">
               <label className="login-label" htmlFor="dashboard-password">
                 Password
               </label>
               <div className="login-input-wrap">
-                <span className="login-input-icon" aria-hidden="true">🔒</span>
+                <span className="login-input-icon" aria-hidden="true">
+                  <LockIcon />
+                </span>
                 <input
                   id="dashboard-password"
                   type={showPass ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
-                    if (error) setError(''); // Clear error as user types
+                    if (error) setError('');
                   }}
                   className={`login-input ${error ? 'login-input--error' : ''}`}
                   placeholder="Enter password"
@@ -78,14 +124,14 @@ const LoginPage = () => {
                   onClick={() => setShowPass((v) => !v)}
                   aria-label={showPass ? 'Hide password' : 'Show password'}
                 >
-                  {showPass ? '🙈' : '👁️'}
+                  {showPass ? <EyeOffIcon /> : <EyeIcon />}
                 </button>
               </div>
 
-              {/* Inline error message */}
               {error && (
                 <p className="login-error" role="alert" id="login-error-msg">
-                  ⚠️ {error}
+                  <AlertIcon />
+                  {error}
                 </p>
               )}
             </div>
@@ -96,14 +142,14 @@ const LoginPage = () => {
               disabled={!password}
               id="login-submit-btn"
             >
-              Unlock Dashboard →
+              Access Dashboard
             </button>
           </form>
-        </div>
 
-        <p className="login-footer-note">
-          🔐 Session expires when you close the browser tab
-        </p>
+          <p className="login-footer-note">
+            Session expires when you close the browser tab
+          </p>
+        </div>
       </div>
     </div>
   );

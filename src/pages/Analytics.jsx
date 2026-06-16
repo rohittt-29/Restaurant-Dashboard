@@ -1,19 +1,12 @@
 /**
  * Analytics.jsx — Business insights dashboard
  *
- * WHAT THIS PAGE SHOWS:
- * 1. Stat cards: Today's orders, today's revenue, most ordered item, avg order value
- * 2. Bar chart: Orders per day for the last 7 days
- *
- * WHY RECHARTS:
- * - Purpose-built for React (not a jQuery plugin wrapped in React)
- * - Composable API — you build charts by composing components like <BarChart>, <Bar>, etc.
- * - Responsive out of the box via <ResponsiveContainer>
- * - Lightweight: only import what you use
- *
- * DATA SOURCE:
- * All data comes from GET /analytics — the backend aggregates the numbers.
- * We don't do complex calculation here; the backend is better suited for database aggregations.
+ * Redesigned:
+ * - 4 stat cards in a row, no gaps — unified border treatment
+ * - Colored dot accents instead of emoji icons
+ * - Big bold numbers
+ * - Chart takes full remaining width
+ * - No emojis anywhere
  */
 
 import { useState, useEffect } from 'react';
@@ -30,29 +23,40 @@ import { fetchAnalytics } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 
+// SVG icons for empty/error states
+const ChartIcon = () => (
+  <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="2,16 7,10 11,13 15,7 20,9" />
+    <line x1="2" y1="19" x2="20" y2="19" />
+  </svg>
+);
+
+const AlertIcon = () => (
+  <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="9" />
+    <line x1="11" y1="7" x2="11" y2="11.5" />
+    <circle cx="11" cy="15" r="0.5" fill="currentColor" />
+  </svg>
+);
+
 /**
- * StatCard — A single metric display box
- * Extracted as a local component because it's used 4 times on this page
- * but nowhere else, so it doesn't need its own file.
+ * StatCard — A single metric display box with colored dot accent
  */
-const StatCard = ({ icon, label, value, sub }) => (
+const StatCard = ({ accentClass, label, value, sub }) => (
   <div className="stat-card">
-    <div className="stat-card__icon">{icon}</div>
-    <div className="stat-card__body">
-      <p className="stat-card__label">{label}</p>
-      <p className="stat-card__value">{value}</p>
-      {/* Optional sub-label shown in smaller text below the main value */}
-      {sub && <p className="stat-card__sub">{sub}</p>}
-    </div>
+    <p className="stat-card__label">
+      <span className={`stat-card__accent ${accentClass}`} aria-hidden="true" />
+      {label}
+    </p>
+    <p className="stat-card__value">{value}</p>
+    {sub && <p className="stat-card__sub">{sub}</p>}
   </div>
 );
 
 /**
- * CustomTooltip — Replaces Recharts' default tooltip with our branded style
- * The default tooltip is functional but generic — this matches our green theme.
+ * CustomTooltip — Branded dark tooltip for bar chart
  */
 const CustomTooltip = ({ active, payload, label }) => {
-  // Recharts passes `active` as true when the user is hovering over a bar
   if (active && payload && payload.length) {
     return (
       <div className="chart-tooltip">
@@ -65,13 +69,10 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 const Analytics = () => {
-  // Analytics data returned by GET /analytics
   const [analyticsData, setAnalyticsData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch analytics once on page load
-  // Analytics doesn't need real-time updates — a snapshot is sufficient
   useEffect(() => {
     const loadAnalytics = async () => {
       try {
@@ -96,7 +97,7 @@ const Analytics = () => {
     return (
       <div className="page-container">
         <div className="error-banner">
-          <span>⚠️</span>
+          <span className="error-banner__icon"><AlertIcon /></span>
           <p>{error}</p>
         </div>
       </div>
@@ -107,7 +108,7 @@ const Analytics = () => {
     return (
       <div className="page-container">
         <EmptyState
-          icon="📊"
+          icon={<ChartIcon />}
           title="No analytics available"
           message="Analytics data will appear once orders start coming in."
         />
@@ -115,15 +116,12 @@ const Analytics = () => {
     );
   }
 
-  // Destructure expected fields from the analytics response.
-  // Field names must EXACTLY match what the backend sends.
-  // API returns: { ordersToday, revenueToday, mostOrdered, avgOrderValue, dailyOrders }
   const {
     ordersToday = 0,
     revenueToday = 0,
     mostOrdered = 'N/A',
     avgOrderValue = 0,
-    dailyOrders = [], // Array of { date: 'Mon', count: 12 } for the bar chart
+    dailyOrders = [],
   } = analyticsData;
 
   return (
@@ -135,83 +133,77 @@ const Analytics = () => {
         </div>
       </div>
 
-      {/* STAT CARDS ROW — 4 key metrics */}
+      {/* STAT CARDS — 4 in a row, no gaps, unified border */}
       <div className="stat-cards-grid">
         <StatCard
-          icon="🛒"
+          accentClass="stat-card__accent--orders"
           label="Orders Today"
           value={ordersToday}
           sub="total orders placed"
         />
         <StatCard
-          icon="💰"
+          accentClass="stat-card__accent--revenue"
           label="Revenue Today"
           value={`₹${Number(revenueToday).toFixed(2)}`}
           sub="total earnings"
         />
         <StatCard
-          icon="🏆"
+          accentClass="stat-card__accent--popular"
           label="Most Ordered"
           value={mostOrdered}
           sub="most popular item"
         />
         <StatCard
-          icon="📈"
+          accentClass="stat-card__accent--avg"
           label="Avg Order Value"
           value={`₹${Number(avgOrderValue).toFixed(2)}`}
           sub="per order"
         />
       </div>
 
-      {/* BAR CHART — Orders per day for the last 7 days */}
+      {/* BAR CHART — full remaining width */}
       <div className="chart-card">
         <h3 className="chart-card__title">Orders — Last 7 Days</h3>
         <p className="chart-card__subtitle">Daily order volume trend</p>
 
         {dailyOrders.length === 0 ? (
           <EmptyState
-            icon="📉"
+            icon={<ChartIcon />}
             title="No chart data yet"
             message="Data will appear once you have at least one day of orders."
           />
         ) : (
-          /*
-           * ResponsiveContainer makes the chart fill its parent width automatically.
-           * Without it, the chart would have a fixed pixel width and break on mobile.
-           */
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height={300}>
             <BarChart
               data={dailyOrders}
-              margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+              margin={{ top: 8, right: 0, left: -20, bottom: 0 }}
             >
-              {/* Subtle grid lines help the eye track values horizontally */}
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-
-              {/* X axis shows the day labels (Mon, Tue, etc.) from the data */}
+              <CartesianGrid
+                strokeDasharray="0"
+                stroke="#F1F5F9"
+                vertical={false}
+              />
               <XAxis
                 dataKey="date"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 12, fill: '#888' }}
+                tick={{ fontSize: 12, fill: '#94A3B8', fontFamily: 'Inter, sans-serif' }}
               />
-
-              {/* Y axis shows the count — hide axis line for cleaner look */}
               <YAxis
                 axisLine={false}
                 tickLine={false}
-                tick={{ fontSize: 12, fill: '#888' }}
+                tick={{ fontSize: 12, fill: '#94A3B8', fontFamily: 'Inter, sans-serif' }}
                 allowDecimals={false}
               />
-
-              {/* Our custom tooltip component replaces the default grey box */}
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f0fdf4' }} />
-
-              {/* The actual bars — filled with our green accent color */}
+              <Tooltip
+                content={<CustomTooltip />}
+                cursor={{ fill: '#F8FAFC' }}
+              />
               <Bar
                 dataKey="count"
-                fill="#1D9E75"
-                radius={[6, 6, 0, 0]} // Rounded top corners on bars — modern look
-                maxBarSize={60}
+                fill="#0F172A"
+                radius={[4, 4, 0, 0]}
+                maxBarSize={48}
               />
             </BarChart>
           </ResponsiveContainer>

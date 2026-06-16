@@ -1,17 +1,9 @@
 /**
  * MenuManagement.jsx — CRUD interface for restaurant menu items
  *
- * FEATURES:
- * - List all menu items (name, price, availability toggle)
- * - Add new item via modal form
- * - Edit existing item inline (name and price)
- * - Delete item with confirmation prompt
- * - Toggle available/unavailable instantly
- *
- * WHY MODAL FOR ADD/EDIT:
- * Modals keep the user on the same page — no navigation needed.
- * The menu list stays visible behind the modal for context.
- * This is better than a separate "add item" page for a small form.
+ * Redesigned: 2-column card grid, unavailable items greyed out,
+ * dark "+ Add Item" button top right, no emojis.
+ * All functionality identical to original.
  */
 
 import { useState, useEffect } from 'react';
@@ -24,27 +16,62 @@ import {
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 
-// The initial/empty state for the form — used both for Add and Edit modes
 const EMPTY_FORM = { name: '', price: '' };
 
+// SVG Icons — no emojis
+const EditIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M11 2l3 3-8 8H3v-3l8-8z" />
+  </svg>
+);
+
+const TrashIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="3,4 13,4" />
+    <path d="M5 4V3a1 1 0 011-1h4a1 1 0 011 1v1" />
+    <rect x="4" y="4" width="8" height="10" rx="1" />
+    <line x1="6" y1="7" x2="6" y2="11" />
+    <line x1="10" y1="7" x2="10" y2="11" />
+  </svg>
+);
+
+const PlusIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <line x1="8" y1="3" x2="8" y2="13" />
+    <line x1="3" y1="8" x2="13" y2="8" />
+  </svg>
+);
+
+const MenuEmptyIcon = () => (
+  <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="16" height="16" rx="2" />
+    <line x1="8" y1="8" x2="14" y2="8" />
+    <line x1="8" y1="11" x2="14" y2="11" />
+    <line x1="8" y1="14" x2="11" y2="14" />
+  </svg>
+);
+
+const AlertIcon = () => (
+  <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="9" />
+    <line x1="11" y1="7" x2="11" y2="11.5" />
+    <circle cx="11" cy="15" r="0.5" fill="currentColor" />
+  </svg>
+);
+
 const MenuManagement = () => {
-  // Full list of menu items from the backend
   const [menuItems, setMenuItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Modal visibility and which mode we're in (add vs edit)
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState(null); // null = Add mode, item object = Edit mode
+  const [editingItem, setEditingItem] = useState(null);
 
-  // Form input values — controlled inputs are easier to validate and reset
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [formError, setFormError] = useState('');
 
-  // Track which item is being saved/deleted to show loading state on that specific item
   const [savingItemId, setSavingItemId] = useState(null);
 
-  // Fetch all menu items from GET /menu when the page loads
   useEffect(() => {
     loadMenu();
   }, []);
@@ -63,7 +90,6 @@ const MenuManagement = () => {
     }
   };
 
-  // Opens the modal in ADD mode — empty form, no editing item
   const openAddModal = () => {
     setEditingItem(null);
     setFormData(EMPTY_FORM);
@@ -71,7 +97,6 @@ const MenuManagement = () => {
     setIsModalOpen(true);
   };
 
-  // Opens the modal in EDIT mode — pre-fills form with existing item data
   const openEditModal = (item) => {
     setEditingItem(item);
     setFormData({ name: item.name, price: String(item.price) });
@@ -79,7 +104,6 @@ const MenuManagement = () => {
     setIsModalOpen(true);
   };
 
-  // Closes the modal and resets form state completely
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingItem(null);
@@ -87,12 +111,9 @@ const MenuManagement = () => {
     setFormError('');
   };
 
-  // Handles both Add and Edit form submissions
   const handleFormSubmit = async (event) => {
-    // Prevent browser's default form submission (which would reload the page)
     event.preventDefault();
 
-    // Client-side validation — catch obvious errors before hitting the backend
     const trimmedName = formData.name.trim();
     const parsedPrice = parseFloat(formData.price);
 
@@ -108,23 +129,19 @@ const MenuManagement = () => {
     const itemPayload = { name: trimmedName, price: parsedPrice };
 
     try {
-      setSavingItemId('form'); // Show loading state on submit button
+      setSavingItemId('form');
 
       if (editingItem) {
-        // EDIT MODE: update existing item
         const updatedItem = await updateMenuItem(editingItem._id, itemPayload);
-        // Replace the old item in the list without re-fetching everything
         setMenuItems((prev) =>
           prev.map((item) => (item._id === editingItem._id ? updatedItem : item))
         );
       } else {
-        // ADD MODE: create new item
         const newItem = await addMenuItem({ ...itemPayload, available: true });
-        // Append to end of list
         setMenuItems((prev) => [...prev, newItem]);
       }
 
-      closeModal(); // Close modal on success
+      closeModal();
     } catch (err) {
       setFormError('Failed to save item. Please try again.');
       console.error('Menu save error:', err);
@@ -133,18 +150,9 @@ const MenuManagement = () => {
     }
   };
 
-  /**
-   * toggleAvailability — Flips the available flag for a menu item
-   *
-   * WHY OPTIMISTIC UPDATE:
-   * The toggle switch should feel instant.
-   * We flip the UI immediately, then sync with the backend.
-   * If it fails, we flip back and show an alert.
-   */
   const toggleAvailability = async (item) => {
     const newAvailability = !item.available;
 
-    // Immediately update the toggle in the UI
     setMenuItems((prev) =>
       prev.map((m) =>
         m._id === item._id ? { ...m, available: newAvailability } : m
@@ -154,7 +162,6 @@ const MenuManagement = () => {
     try {
       await updateMenuItem(item._id, { available: newAvailability });
     } catch (err) {
-      // Revert the toggle if the backend call failed
       setMenuItems((prev) =>
         prev.map((m) =>
           m._id === item._id ? { ...m, available: item.available } : m
@@ -165,7 +172,6 @@ const MenuManagement = () => {
     }
   };
 
-  // Deletes an item after confirmation — irreversible action requires confirmation
   const handleDelete = async (item) => {
     const confirmed = window.confirm(
       `Delete "${item.name}" from the menu? This cannot be undone.`
@@ -173,9 +179,8 @@ const MenuManagement = () => {
     if (!confirmed) return;
 
     try {
-      setSavingItemId(item._id); // Show loading on this specific item's delete button
+      setSavingItemId(item._id);
       await deleteMenuItem(item._id);
-      // Remove from list without re-fetching
       setMenuItems((prev) => prev.filter((m) => m._id !== item._id));
     } catch (err) {
       alert('Failed to delete item. Please try again.');
@@ -194,43 +199,48 @@ const MenuManagement = () => {
           <h2 className="page-title">Menu Management</h2>
           <p className="page-subtitle">{menuItems.length} items on menu</p>
         </div>
-        {/* Add Item button opens the modal in Add mode */}
+        {/* Add Item button — dark colored, top right */}
         <button className="btn btn--primary" onClick={openAddModal} id="add-menu-item-btn">
-          + Add Item
+          <PlusIcon />
+          Add Item
         </button>
       </div>
 
       {error && (
         <div className="error-banner">
-          <span>⚠️</span>
+          <span className="error-banner__icon"><AlertIcon /></span>
           <p>{error}</p>
           <button className="btn btn--outline" onClick={loadMenu}>Retry</button>
         </div>
       )}
 
-      {/* MENU ITEMS LIST */}
+      {/* MENU ITEMS GRID — 2 columns */}
       {menuItems.length === 0 && !error ? (
         <EmptyState
-          icon="🍽️"
+          icon={<MenuEmptyIcon />}
           title="Menu is empty"
           message="Add your first menu item to get started."
         />
       ) : (
-        <div className="menu-list">
+        <div className="menu-grid">
           {menuItems.map((item) => (
             <div
               key={item._id}
               className={`menu-item ${!item.available ? 'menu-item--unavailable' : ''}`}
             >
-              {/* Item info section */}
-              <div className="menu-item__info">
-                <h3 className="menu-item__name">{item.name}</h3>
-                <span className="menu-item__price">₹{Number(item.price).toFixed(2)}</span>
+              {/* Top: name, price, unavailable tag */}
+              <div className="menu-item__header">
+                <div className="menu-item__info">
+                  <h3 className="menu-item__name">{item.name}</h3>
+                  <span className="menu-item__price">₹{Number(item.price).toFixed(2)}</span>
+                </div>
+                {!item.available && (
+                  <span className="menu-item__unavail-tag">Unavailable</span>
+                )}
               </div>
 
-              {/* Actions: availability toggle + edit + delete */}
+              {/* Bottom: toggle + action buttons */}
               <div className="menu-item__actions">
-                {/* Toggle switch for availability — visually shows on/off state */}
                 <label className="toggle" aria-label={`${item.available ? 'Disable' : 'Enable'} ${item.name}`}>
                   <input
                     type="checkbox"
@@ -240,28 +250,30 @@ const MenuManagement = () => {
                   />
                   <span className="toggle__slider" />
                   <span className="toggle__label">
-                    {item.available ? 'Available' : 'Unavailable'}
+                    {item.available ? 'Available' : 'Off'}
                   </span>
                 </label>
 
-                {/* Edit button */}
-                <button
-                  className="btn btn--ghost btn--sm"
-                  onClick={() => openEditModal(item)}
-                  aria-label={`Edit ${item.name}`}
-                >
-                  ✏️ Edit
-                </button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    className="btn btn--ghost btn--sm"
+                    onClick={() => openEditModal(item)}
+                    aria-label={`Edit ${item.name}`}
+                  >
+                    <EditIcon />
+                    Edit
+                  </button>
 
-                {/* Delete button — shows loading state while deleting */}
-                <button
-                  className="btn btn--danger btn--sm"
-                  onClick={() => handleDelete(item)}
-                  disabled={savingItemId === item._id}
-                  aria-label={`Delete ${item.name}`}
-                >
-                  {savingItemId === item._id ? '...' : '🗑️ Delete'}
-                </button>
+                  <button
+                    className="btn btn--danger btn--sm"
+                    onClick={() => handleDelete(item)}
+                    disabled={savingItemId === item._id}
+                    aria-label={`Delete ${item.name}`}
+                  >
+                    <TrashIcon />
+                    {savingItemId === item._id ? '...' : 'Delete'}
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -270,23 +282,22 @@ const MenuManagement = () => {
 
       {/* ADD / EDIT MODAL */}
       {isModalOpen && (
-        // Clicking the backdrop (outside the modal card) closes the modal
         <div className="modal-backdrop" onClick={closeModal} role="dialog" aria-modal="true">
           <div
             className="modal"
-            // stopPropagation prevents clicks INSIDE the modal from closing it
             onClick={(e) => e.stopPropagation()}
           >
             <div className="modal__header">
               <h3 className="modal__title">
                 {editingItem ? `Edit "${editingItem.name}"` : 'Add New Item'}
               </h3>
-              <button className="modal__close" onClick={closeModal} aria-label="Close modal">✕</button>
+              <button className="modal__close" onClick={closeModal} aria-label="Close modal">
+                ✕
+              </button>
             </div>
 
             <form onSubmit={handleFormSubmit} noValidate>
               <div className="modal__body">
-                {/* Item name input */}
                 <div className="form-group">
                   <label htmlFor="item-name" className="form-label">Item Name</label>
                   <input
@@ -300,7 +311,6 @@ const MenuManagement = () => {
                   />
                 </div>
 
-                {/* Price input */}
                 <div className="form-group">
                   <label htmlFor="item-price" className="form-label">Price (₹)</label>
                   <input
@@ -315,7 +325,6 @@ const MenuManagement = () => {
                   />
                 </div>
 
-                {/* Validation error message */}
                 {formError && <p className="form-error">{formError}</p>}
               </div>
 

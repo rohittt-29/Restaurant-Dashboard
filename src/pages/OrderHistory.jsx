@@ -1,14 +1,9 @@
 /**
  * OrderHistory.jsx — Filterable table of all past orders
  *
- * WHY A TABLE INSTEAD OF CARDS:
- * The history page is for reviewing data, not taking action.
- * Tables are better for scanning many rows quickly and comparing columns.
- * Cards are better for individual attention (like in LiveOrders).
- *
- * FILTERS:
- * - Date filter: owner might want to see yesterday's orders
- * - Status filter: might want to see only pending/preparing to find missed orders
+ * Redesigned: clean full-width table, alternating row backgrounds,
+ * small status pills, stripped ORDER_CONFIRMED prefix from items,
+ * no emojis.
  */
 
 import { useState, useEffect, useMemo } from 'react';
@@ -17,25 +12,35 @@ import StatusBadge from '../components/StatusBadge';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 
+// SVG icons
+const SearchIcon = () => (
+  <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="10" cy="10" r="7" />
+    <line x1="15" y1="15" x2="20" y2="20" />
+  </svg>
+);
+
+const AlertIcon = () => (
+  <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="9" />
+    <line x1="11" y1="7" x2="11" y2="11.5" />
+    <circle cx="11" cy="15" r="0.5" fill="currentColor" />
+  </svg>
+);
+
 const OrderHistory = () => {
-  // All orders fetched from the backend — unfiltered source of truth
   const [allOrders, setAllOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Filter state — controlled by the filter inputs at the top of the table
-  const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'pending' | 'preparing' | 'done'
-  const [dateFilter, setDateFilter] = useState('');         // ISO date string like '2024-01-15'
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('');
 
-  // Fetch all orders once when the page mounts
-  // This page doesn't need real-time updates — history is for reviewing, not monitoring
   useEffect(() => {
     const loadOrders = async () => {
       try {
         setIsLoading(true);
         const data = await fetchOrders();
-
-        // Sort by newest first so the most recent orders appear at the top of history
         const sorted = [...data].sort(
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
         );
@@ -49,33 +54,19 @@ const OrderHistory = () => {
     };
 
     loadOrders();
-  }, []); // Empty deps array = runs only once on mount
+  }, []);
 
-  /**
-   * filteredOrders — computes the displayed orders by applying both filters
-   *
-   * WHY useMemo:
-   * Filtering can be expensive with many orders.
-   * useMemo caches the result and only recalculates when allOrders, statusFilter,
-   * or dateFilter changes — not on every render.
-   */
   const filteredOrders = useMemo(() => {
     return allOrders.filter((order) => {
-      // Apply status filter — skip if set to 'all'
       const matchesStatus =
         statusFilter === 'all' || order.status === statusFilter;
-
-      // Apply date filter — compare the date part only (ignore time)
       const matchesDate =
         !dateFilter ||
         new Date(order.createdAt).toISOString().slice(0, 10) === dateFilter;
-
-      // Order must pass BOTH filters to be included
       return matchesStatus && matchesDate;
     });
   }, [allOrders, statusFilter, dateFilter]);
 
-  // Format a timestamp into readable date + time
   const formatDateTime = (timestamp) => {
     return new Date(timestamp).toLocaleString('en-IN', {
       day: 'numeric',
@@ -87,10 +78,30 @@ const OrderHistory = () => {
     });
   };
 
-  // Format items array into comma-separated readable string
+  /**
+   * formatItems — strips ORDER_CONFIRMED prefix if present, then shows item names
+   * Handles both array of item objects and raw text strings
+   */
   const formatItems = (items) => {
     if (!items || items.length === 0) return '—';
-    return items.map((item) => `${item.name} ×${item.qty || 1}`).join(', ');
+    return items
+      .map((item) => {
+        // If item has a name property (structured object), use it directly
+        if (item && typeof item === 'object' && item.name) {
+          // Strip any "ORDER_CONFIRMED" prefix from the name just in case
+          const cleanName = String(item.name)
+            .replace(/ORDER_CONFIRMED\s*/gi, '')
+            .trim();
+          return `${cleanName} ×${item.qty || 1}`;
+        }
+        // If it's a plain string, strip the prefix
+        if (typeof item === 'string') {
+          return item.replace(/ORDER_CONFIRMED\s*/gi, '').trim();
+        }
+        return String(item);
+      })
+      .filter(Boolean)
+      .join(', ');
   };
 
   if (isLoading) return <LoadingSpinner message="Loading order history..." />;
@@ -104,9 +115,8 @@ const OrderHistory = () => {
         </div>
       </div>
 
-      {/* FILTER BAR — allows narrowing down the table */}
+      {/* FILTER BAR */}
       <div className="filter-bar">
-        {/* Date picker — filters orders to a specific day */}
         <div className="filter-bar__group">
           <label htmlFor="date-filter" className="filter-bar__label">Date</label>
           <input
@@ -118,7 +128,6 @@ const OrderHistory = () => {
           />
         </div>
 
-        {/* Status dropdown */}
         <div className="filter-bar__group">
           <label htmlFor="status-filter" className="filter-bar__label">Status</label>
           <select
@@ -134,7 +143,6 @@ const OrderHistory = () => {
           </select>
         </div>
 
-        {/* Clear filters button — resets both filters at once */}
         {(statusFilter !== 'all' || dateFilter) && (
           <button
             className="btn btn--ghost"
@@ -151,7 +159,7 @@ const OrderHistory = () => {
       {/* Error state */}
       {error && (
         <div className="error-banner">
-          <span>⚠️</span>
+          <span className="error-banner__icon"><AlertIcon /></span>
           <p>{error}</p>
         </div>
       )}
@@ -159,7 +167,7 @@ const OrderHistory = () => {
       {/* ORDERS TABLE */}
       {filteredOrders.length === 0 ? (
         <EmptyState
-          icon="🔍"
+          icon={<SearchIcon />}
           title="No orders found"
           message="Try adjusting your filters, or no orders have been placed yet."
         />
@@ -168,7 +176,7 @@ const OrderHistory = () => {
           <table className="orders-table" aria-label="Order history table">
             <thead>
               <tr>
-                <th scope="col">Date & Time</th>
+                <th scope="col">Date &amp; Time</th>
                 <th scope="col">Customer</th>
                 <th scope="col">Items</th>
                 <th scope="col">Total</th>
@@ -183,7 +191,7 @@ const OrderHistory = () => {
                   </td>
                   <td className="orders-table__cell">
                     <span className="orders-table__phone">
-                      📱 {order.customerPhone || 'Unknown'}
+                      {order.customerPhone || 'Unknown'}
                     </span>
                   </td>
                   <td className="orders-table__cell orders-table__cell--items">

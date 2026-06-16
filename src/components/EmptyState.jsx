@@ -1,23 +1,25 @@
 /**
  * EmptyState.jsx — Reusable empty state component
- *
- * WHY THIS EXISTS:
- * When there's no data to show (no orders yet, no menu items, etc.),
- * we should show a helpful message instead of just a blank white screen.
- * Blank screens make users think something broke — empty states guide them.
- *
- * @param {string} icon - Emoji or icon to display prominently
- * @param {string} title - Short headline (e.g., "No orders yet")
- * @param {string} message - Helpful explanation of what to expect
+ * Redesigned: geometric box icon with SVG instead of emoji
  */
 
-const EmptyState = ({ icon = '📭', title = 'Nothing here yet', message = '' }) => {
+// A simple generic "inbox" icon for empty states
+const DefaultIcon = () => (
+  <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="16" height="16" rx="2" />
+    <line x1="3" y1="9" x2="19" y2="9" />
+    <line x1="9" y1="9" x2="9" y2="19" />
+  </svg>
+);
+
+const EmptyState = ({ icon, title = 'Nothing here yet', message = '' }) => {
   return (
     <div className="empty-state">
-      {/* Large icon/emoji makes the empty state friendly and easy to scan */}
-      <div className="empty-state__icon">{icon}</div>
+      <div className="empty-state__icon" aria-hidden="true">
+        {/* If a custom SVG element is passed use it, otherwise use default */}
+        {icon && typeof icon === 'object' ? icon : <DefaultIcon />}
+      </div>
       <h3 className="empty-state__title">{title}</h3>
-      {/* Only render the message paragraph if a message was provided */}
       {message && <p className="empty-state__message">{message}</p>}
     </div>
   );
