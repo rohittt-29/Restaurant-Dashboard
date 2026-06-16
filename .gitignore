@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Environment variable files — may contain passwords/secrets
+.env
+.env.local
+.env.*.local
+# .env.example is safe to commit (no real secrets)
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

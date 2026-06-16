@@ -2,27 +2,40 @@
  * api.js — Centralized API service
  *
  * WHY THIS FILE EXISTS:
- * Instead of writing axios.get('http://localhost:3000/...') in every component,
+ * Instead of writing the full backend URL in every component,
  * we put ALL backend calls here. This means:
  * - If the backend URL ever changes, we fix it in ONE place
  * - Each page imports clean functions like fetchOrders() instead of raw URLs
- * - Easy to add auth headers or error logging in one spot later
+ * - Auth headers or retry logic can be added here once and apply everywhere
+ *
+ * HOW THE URL IS RESOLVED:
+ * - import.meta.env.VITE_API_URL is injected by Vite at build time
+ * - In development:  set in .env → e.g. https://restaurant-bot-eqiv.onrender.com
+ *                    (Vite's proxy also intercepts /api/* calls as a fallback
+ *                     if you want to use the local mock server instead)
+ * - In production:   set as an Environment Variable in Vercel's project settings
+ *                    → https://restaurant-bot-eqiv.onrender.com
+ *
+ * IMPORTANT: VITE_* prefix is required. Vite strips all env vars that don't
+ * start with VITE_ from the client bundle for security.
  */
 
 import axios from 'axios';
 
-// Base URL for all API calls.
-// WHY EMPTY STRING: We use Vite's proxy (configured in vite.config.js) to forward
-// requests to the backend. Setting this to '' means axios sends to '/orders', '/menu' etc.
-// which go to Vite's own port — Vite then proxies them to http://localhost:3000.
-// This avoids CORS entirely: the browser only ever talks to localhost:5174.
-const BASE_URL = '';
+// Read the backend base URL from Vite's env system.
+// This is baked into the JS bundle at build time — not a runtime variable.
+// Fallback to empty string (which enables the Vite dev proxy) if unset.
+const BASE_URL = import.meta.env.VITE_API_URL || '';
 
-// Create a single axios instance with the base URL pre-configured
-// This avoids repeating the full URL in every function
+// Create a single axios instance with the base URL pre-configured.
 const apiClient = axios.create({
   baseURL: BASE_URL,
-  timeout: 10000, // Fail after 10 seconds so the UI doesn't hang forever
+
+  // Render's free tier cold-starts can take up to 30–50 seconds after
+  // inactivity. 30 seconds is safer than the previous 10-second timeout
+  // to avoid false "backend unreachable" errors on first page load.
+  timeout: 30000,
+
   headers: {
     'Content-Type': 'application/json',
   },
@@ -31,8 +44,8 @@ const apiClient = axios.create({
 // ─── ORDERS ──────────────────────────────────────────────────────────────────
 
 /**
- * Fetches all orders from the backend (pending, preparing, and done)
- * Used by LiveOrders page on first load and OrderHistory page
+ * Fetches all orders from the backend (pending, preparing, and done).
+ * Used by LiveOrders page on first load and OrderHistory page.
  */
 export const fetchOrders = async () => {
   const response = await apiClient.get('/api/orders');
@@ -40,11 +53,9 @@ export const fetchOrders = async () => {
 };
 
 /**
- * Updates the status of a specific order
+ * Updates the status of a specific order.
  * @param {string} orderId - The unique ID of the order
  * @param {string} status - New status: 'pending' | 'preparing' | 'done'
- *
- * Called when restaurant owner clicks "Mark as Preparing" or "Mark as Done"
  */
 export const updateOrderStatus = async (orderId, status) => {
   const response = await apiClient.patch(`/api/orders/${orderId}/status`, { status });
@@ -54,8 +65,8 @@ export const updateOrderStatus = async (orderId, status) => {
 // ─── MENU ─────────────────────────────────────────────────────────────────────
 
 /**
- * Fetches all menu items (name, price, availability)
- * Used by MenuManagement page
+ * Fetches all menu items (name, price, availability).
+ * Used by MenuManagement page.
  */
 export const fetchMenu = async () => {
   const response = await apiClient.get('/api/menu');
@@ -63,7 +74,7 @@ export const fetchMenu = async () => {
 };
 
 /**
- * Adds a brand new menu item
+ * Adds a brand new menu item.
  * @param {Object} itemData - { name: string, price: number }
  */
 export const addMenuItem = async (itemData) => {
@@ -72,7 +83,7 @@ export const addMenuItem = async (itemData) => {
 };
 
 /**
- * Updates an existing menu item (name, price, or availability)
+ * Updates an existing menu item (name, price, or availability).
  * @param {string} itemId - The ID of the menu item to update
  * @param {Object} updates - Fields to update (e.g., { available: false })
  */
@@ -82,7 +93,7 @@ export const updateMenuItem = async (itemId, updates) => {
 };
 
 /**
- * Permanently deletes a menu item
+ * Permanently deletes a menu item.
  * @param {string} itemId - The ID of the menu item to delete
  */
 export const deleteMenuItem = async (itemId) => {
@@ -93,8 +104,8 @@ export const deleteMenuItem = async (itemId) => {
 // ─── ANALYTICS ───────────────────────────────────────────────────────────────
 
 /**
- * Fetches analytics data: today's totals, most ordered item, daily chart data
- * Used by Analytics page
+ * Fetches analytics data: today's totals, most ordered item, daily chart data.
+ * Used by Analytics page.
  */
 export const fetchAnalytics = async () => {
   const response = await apiClient.get('/api/analytics');

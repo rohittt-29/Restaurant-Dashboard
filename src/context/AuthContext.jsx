@@ -16,10 +16,11 @@
 
 import { createContext, useContext, useState } from 'react';
 
-// ─── CHANGE PASSWORD HERE ─────────────────────────────────────────────────────
-// To update the password, simply change the string below.
-const DASHBOARD_PASSWORD = 'admin123';
-// ─────────────────────────────────────────────────────────────────────────────
+// Password is read from the VITE_DASHBOARD_PASSWORD environment variable.
+// - Local dev:   set in .env file
+// - Production:  set in Vercel → Project → Settings → Environment Variables
+// Falls back to 'admin123' if the variable is not set (dev convenience only).
+const DASHBOARD_PASSWORD = import.meta.env.VITE_DASHBOARD_PASSWORD || 'admin123';
 
 const AuthContext = createContext(null);
 

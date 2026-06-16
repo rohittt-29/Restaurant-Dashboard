@@ -51,7 +51,7 @@ const useOrders = () => {
       setOrders(sortedOrders);
     } catch (err) {
       // Backend is probably down — show a friendly error message instead of crashing
-      setError('Could not connect to backend. Make sure the server is running on port 3000.');
+      setError('Could not connect to the backend. Please check your connection and try again.');
       console.error('Failed to fetch orders:', err);
     } finally {
       // Always turn off loading, even if the fetch failed

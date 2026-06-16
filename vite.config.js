@@ -1,50 +1,57 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
-export default defineConfig({
-  plugins: [react()],
+export default defineConfig(({ mode }) => {
+  // Load .env variables for the current mode (development / production)
+  // so we can read VITE_API_URL inside this config file.
+  const env = loadEnv(mode, process.cwd(), '')
 
-  server: {
-    /**
-     * WHY historyApiFallback:
-     * React Router manages navigation entirely in the browser (client-side routing).
-     * When you type /analytics in the URL bar and hit refresh, the browser asks
-     * the dev server for a file at that exact path. Since /analytics is not a real
-     * file on disk, the server would normally return 404.
-     *
-     * historyApiFallback tells Vite's dev server: "For any 404 on a HTML request,
-     * serve index.html instead." React Router then reads the URL and renders the
-     * correct page — so refresh always works.
-     */
-    historyApiFallback: true,
+  // The backend origin — e.g. http://localhost:3000 in dev
+  // or https://restaurant-bot-eqiv.onrender.com in production.
+  // Falls back to localhost:3000 if the env var is not set.
+  const backendUrl = env.VITE_API_URL || 'http://localhost:3000'
 
-    /**
-     * WHY A PROXY:
-     * The browser blocks cross-origin requests (CORS) when the frontend at
-     * localhost:5174 tries to directly call the backend at localhost:3000.
-     *
-     * Instead of requiring the backend to set CORS headers, we tell Vite to
-     * act as a middleman: any request starting with /orders, /menu, /analytics,
-     * or /socket.io gets SILENTLY forwarded to http://localhost:3000 by Vite's
-     * own server. Since it's server-to-server, CORS rules don't apply.
-     *
-     * This means axios calls use relative URLs like '/orders' instead of
-     * 'http://localhost:3000/orders', and the browser never sees a cross-origin request.
-     */
-   proxy: {
-  '/api': {
-    target: 'http://localhost:3000',
-    changeOrigin: true,
-  },
-      // Proxy Socket.IO WebSocket connection to the backend
-      // ws: true enables WebSocket proxying (not just HTTP)
-      '/socket.io': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-        ws: true,  // Critical: allows the WebSocket upgrade for Socket.IO
+  return {
+    plugins: [react()],
+
+    build: {
+      // Output directory for Vercel — default is 'dist', Vercel auto-detects it
+      outDir: 'dist',
+      // Generate source maps in production for easier debugging on Sentry / DevTools
+      sourcemap: false,
+    },
+
+    server: {
+      /**
+       * historyApiFallback: for dev only.
+       * React Router needs the dev server to always serve index.html for unknown
+       * paths, so /analytics refreshes work locally.
+       * On Vercel this is handled by vercel.json rewrites instead.
+       */
+      historyApiFallback: true,
+
+      /**
+       * WHY A PROXY (dev only):
+       * In dev, VITE_API_URL can still point at the Render backend or at
+       * localhost:3000 (mock server). The proxy here proxies any /api/* and
+       * /socket.io/* requests to the backend so we avoid CORS in dev.
+       *
+       * In production (Vercel build), this proxy block is IGNORED — the browser
+       * talks directly to VITE_API_URL (Render). CORS must be allowed on the
+       * backend for this to work.
+       */
+      proxy: {
+        '/api': {
+          target: backendUrl,
+          changeOrigin: true,
+        },
+        '/socket.io': {
+          target: backendUrl,
+          changeOrigin: true,
+          ws: true,
+        },
       },
     },
-  },
+  }
 })
-
