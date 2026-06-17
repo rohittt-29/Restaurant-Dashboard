@@ -27,8 +27,17 @@ const OrderCard = ({ order, onStatusUpdate }) => {
     new Date(order.createdAt).toDateString() === new Date().toDateString();
 
   const formatItems = (items) => {
-    if (!items || items.length === 0) return 'No items';
-    return items.map((item) => `${item.name} ×${item.qty || 1}`).join(', ');
+    // Guard: items might not be an array (e.g. raw string from old socket events)
+    if (!items) return 'No items';
+    if (!Array.isArray(items)) return String(items);
+    if (items.length === 0) return 'No items';
+    return items
+      .map((item) => {
+        const name = item?.name || String(item);
+        const qty = item?.qty ?? item?.quantity ?? 1;
+        return `${name} ×${qty}`;
+      })
+      .join(', ');
   };
 
   const formatPhone = (phone) => {

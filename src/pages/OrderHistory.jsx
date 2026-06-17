@@ -68,7 +68,10 @@ const OrderHistory = () => {
   }, [allOrders, statusFilter, dateFilter]);
 
   const formatDateTime = (timestamp) => {
-    return new Date(timestamp).toLocaleString('en-IN', {
+    if (!timestamp) return 'Unknown date';
+    const date = new Date(timestamp);
+    if (isNaN(date.getTime())) return 'Unknown date';
+    return date.toLocaleString('en-IN', {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
@@ -83,18 +86,21 @@ const OrderHistory = () => {
    * Handles both array of item objects and raw text strings
    */
   const formatItems = (items) => {
-    if (!items || items.length === 0) return '—';
+    if (!items) return '—';
+    // Guard against non-array values (raw string from old data)
+    if (!Array.isArray(items)) {
+      return String(items).replace(/ORDER_CONFIRMED\s*/gi, '').trim() || '—';
+    }
+    if (items.length === 0) return '—';
     return items
       .map((item) => {
-        // If item has a name property (structured object), use it directly
         if (item && typeof item === 'object' && item.name) {
-          // Strip any "ORDER_CONFIRMED" prefix from the name just in case
           const cleanName = String(item.name)
             .replace(/ORDER_CONFIRMED\s*/gi, '')
             .trim();
-          return `${cleanName} ×${item.qty || 1}`;
+          const qty = item.qty ?? item.quantity ?? 1;
+          return `${cleanName} ×${qty}`;
         }
-        // If it's a plain string, strip the prefix
         if (typeof item === 'string') {
           return item.replace(/ORDER_CONFIRMED\s*/gi, '').trim();
         }

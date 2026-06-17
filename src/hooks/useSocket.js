@@ -28,9 +28,18 @@
 import { useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 
-// The Socket.IO server URL — always the backend, not the Vite dev server.
-// Falls back to '/' only if VITE_API_URL is not set (legacy dev behavior).
+// The Socket.IO server URL — always the Render backend, not the Vite dev server.
+// IMPORTANT: If VITE_API_URL is not set as a Vercel Environment Variable, this
+// will fall back to '/' which points to the Vercel static hosting — no Socket.IO
+// server lives there. Set VITE_API_URL in Vercel → Project Settings → Environment Variables.
 const SOCKET_URL = import.meta.env.VITE_API_URL || '/';
+if (!import.meta.env.VITE_API_URL) {
+  console.warn(
+    '[useSocket] VITE_API_URL is not set! Socket will connect to "/" which has no ' +
+    'Socket.IO server on Vercel. Set VITE_API_URL in Vercel\'s Environment Variables to ' +
+    'your Render backend URL (e.g. https://restaurant-bot-eqiv.onrender.com)'
+  );
+}
 
 /**
  * useSocket — connects to the Socket.IO server and listens for a specific event
