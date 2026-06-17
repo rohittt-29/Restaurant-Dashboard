@@ -61,7 +61,7 @@ const Sidebar = () => {
       {/* Logo — text only, no icon */}
       <div className="sidebar__brand">
         <span className="sidebar__logo-text">
-          OrderOS<span className="sidebar__logo-dot" />
+          ServeAI<span className="sidebar__logo-dot" />
         </span>
       </div>
 

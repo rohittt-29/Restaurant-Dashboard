@@ -63,7 +63,7 @@ const LoginPage = () => {
       {/* Left dark panel */}
       <div className="login-left">
         <div className="login-brand-logo">
-          OrderOS
+          ServeAI
           <span className="login-brand-dot" />
         </div>
 
