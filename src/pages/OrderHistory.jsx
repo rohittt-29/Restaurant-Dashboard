@@ -197,8 +197,8 @@ const OrderHistory = () => {
                   </td>
                   <td className="orders-table__cell">
                     <span className="orders-table__phone">
-                      {order.customerPhone || 'Unknown'}
-                    </span>
+  {order.customerPhone ? '••••• ' + order.customerPhone.slice(-4) : 'Unknown'}
+</span>
                   </td>
                   <td className="orders-table__cell orders-table__cell--items">
                     {formatItems(order.items)}

@@ -39,16 +39,10 @@ const OrderCard = ({ order, onStatusUpdate }) => {
       })
       .join(', ');
   };
-
-  const formatPhone = (phone) => {
-    if (!phone) return 'Unknown';
-    const digits = phone.replace(/\D/g, '');
-    if (digits.length === 12 && digits.startsWith('91')) {
-      const local = digits.slice(2);
-      return `+91 ${local.slice(0, 5)} ${local.slice(5)}`;
-    }
-    return phone;
-  };
+const formatPhone = (phone) => {
+  if (!phone) return 'Unknown';
+  return '••••• ' + phone.slice(-4)
+};
 
   return (
     <div className={`order-card order-card--${order.status}`}>
