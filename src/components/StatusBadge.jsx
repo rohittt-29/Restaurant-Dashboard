@@ -12,28 +12,20 @@
 const StatusBadge = ({ status }) => {
   // Map each status string to a CSS class that controls the badge color
   // The classes are defined in index.css
-  const statusConfig = {
-    pending: {
-      label: 'Pending',
-      className: 'badge badge--pending',
-    },
-    preparing: {
-      label: 'Preparing',
-      className: 'badge badge--preparing',
-    },
-    done: {
-      label: 'Done',
-      className: 'badge badge--done',
-    },
-  };
-
+const statusConfig = {
+  awaiting_payment: { label: 'Awaiting Payment', className: 'badge badge--amber' },
+  pending: { label: 'Pending', className: 'badge badge--pending' },
+  preparing: { label: 'Preparing', className: 'badge badge--preparing' },
+  done: { label: 'Done', className: 'badge badge--done' }
+}
   // Fall back gracefully if an unknown status is passed (defensive programming)
-  const config = statusConfig[status] || {
-    label: status,
-    className: 'badge badge--pending',
-  };
 
-  return <span className={config.className}>{config.label}</span>;
+const config = statusConfig[status] || {
+  label: status,
+  className: 'badge badge--pending',
+};
+
+return <span className={config.className}>{config.label}</span>;
 };
 
 export default StatusBadge;

@@ -355,6 +355,10 @@ h1, h2, h3, h4 {
   background-color: var(--color-pending-bg);
   color: var(--color-pending-text);
 }
+.badge--awaiting-payment {
+  background-color: #FEF3C7;
+  color: #92400E;
+}
 
 .badge--preparing {
   background-color: var(--color-preparing-bg);

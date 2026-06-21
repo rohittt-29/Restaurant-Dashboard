@@ -127,12 +127,12 @@ const useOrders = () => {
  * @returns {Array} - Sorted orders array
  */
 const sortOrders = (orderList) => {
-  const statusPriority = {
-    pending: 0,    // Needs action ASAP — shown first
-    preparing: 1,  // Being worked on — shown second
-    done: 2,       // Completed — shown last
-  };
-
+ const statusPriority = {
+  awaiting_payment: -1,  // Sabse upar — action chahiye jaldi
+  pending: 0,
+  preparing: 1,
+  done: 2,
+}
   return [...orderList].sort((a, b) => {
     // First sort by status priority (pending before preparing before done)
     const statusDiff = statusPriority[a.status] - statusPriority[b.status];
