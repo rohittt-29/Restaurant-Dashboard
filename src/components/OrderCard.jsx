@@ -70,6 +70,9 @@ const formatPhone = (phone) => {
         </span>
 
         <div className="order-card__actions">
+          {order.status === 'awaiting_payment' && (
+  <span className="order-card__done-label">Waiting for payment</span>
+)}
           {order.status === 'pending' && (
             <button
               className="btn btn--preparing btn--sm"

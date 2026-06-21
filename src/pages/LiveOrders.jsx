@@ -90,9 +90,12 @@ const LiveOrders = () => {
     }
   }, [orders.length, isLoading, flashTitle]);
 
-  const activeOrders = orders.filter(
-    (order) => order.status === 'pending' || order.status === 'preparing'
-  );
+const activeOrders = orders.filter(
+  (order) => 
+    order.status === 'awaiting_payment' || 
+    order.status === 'pending' || 
+    order.status === 'preparing'
+);
   const completedOrders = orders.filter((order) => order.status === 'done');
 
   if (isLoading) {
